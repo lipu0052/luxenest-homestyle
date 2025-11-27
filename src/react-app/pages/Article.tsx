@@ -6,6 +6,7 @@ import ProductCard from "@/react-app/components/ProductCard";
 import ArticleCard from "@/react-app/components/ArticleCard";
 import EditArticleModal from "@/react-app/components/EditArticleModal";
 import { Article, Product } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 import { 
   Clock, 
   User, 
@@ -52,7 +53,7 @@ export default function ArticlePage() {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await fetch("/api/admin/status");
+        const response = await fetch(`${API}/api/admin/status`);
         const data = await response.json();
         setIsAdmin(data.isAuthenticated);
       } catch {}
@@ -65,16 +66,16 @@ export default function ArticlePage() {
 
     const fetchData = async () => {
       try {
-        const articleResponse = await fetch(`/api/articles/${slug}`);
+        const articleResponse = await fetch(`${API}/api/articles/${slug}`);
         if (!articleResponse.ok) throw new Error("Article not found");
         const articleData = await articleResponse.json();
         setArticle(articleData);
 
         if (articleData.room_id) {
           const [productsRes, articlesRes, topicsRes] = await Promise.all([
-            fetch(`/api/products?room_id=${articleData.room_id}`),
-            fetch(`/api/articles?room_id=${articleData.room_id}`),
-            fetch(`/api/topics?related_to=${articleData._id}`),
+            fetch(`${API}/api/products?room_id=${articleData.room_id}`),
+            fetch(`${API}/api/articles?room_id=${articleData.room_id}`),
+            fetch(`${API}/api/topics?related_to=${articleData._id}`),
           ]);
 
           setProducts((await productsRes.json()).slice(0, 8));

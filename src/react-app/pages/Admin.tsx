@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+const API = import.meta.env.VITE_API_URL;
 import {
   LogOut,
   Plus,
@@ -13,6 +14,7 @@ import {
 import { Room, Article, Product, Analytics } from "@/types";
 import EditArticleModal from "@/react-app/components/EditArticleModal";
 import EditProductModal from "@/react-app/components/EditProductModal";
+
 
 type Tab = "rooms" | "articles" | "products" | "subscribers" | "analytics";
 
@@ -42,7 +44,7 @@ export default function AdminPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("/api/admin/status");
+      const res = await fetch(`${API}/api/admin/status`);
       const data = await res.json();
       setIsAuthenticated(data.isAuthenticated);
     } catch (err) {
@@ -53,7 +55,7 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch(`${API}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -70,18 +72,18 @@ export default function AdminPage() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch(`${API}/api/admin/logout`, { method: "POST" });
     setIsAuthenticated(false);
   };
 
   const fetchData = async () => {
     try {
       const endpoints: Record<Tab, string> = {
-        rooms: "/api/rooms",
-        articles: "/api/articles",
-        products: "/api/products",
-        subscribers: "/api/admin/subscribers",
-        analytics: "/api/admin/analytics",
+        rooms: `${API}/api/rooms`,
+        articles: `${API}/api/articles`,
+        products: `${API}/api/products`,
+        subscribers: `${API}/api/admin/subscribers`,
+        analytics: `${API}/api/admin/analytics`,
       };
 
       const res = await fetch(endpoints[activeTab]);
@@ -112,7 +114,7 @@ export default function AdminPage() {
   const handleDelete = async (id: string, type: "rooms" | "articles" | "products") => {
     if (!confirm("Delete permanently?")) return;
     try {
-      await fetch(`/api/${type}/${id}`, { method: "DELETE" });
+      await fetch(`${API}/api/${type}/${id}`, { method: "DELETE" });
       fetchData();
     } catch {
       alert("Delete failed");
@@ -121,7 +123,7 @@ export default function AdminPage() {
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch("/api/subscribers/export");
+      const res = await fetch(`${API}/api/subscribers/export`);
       if (!res.ok) throw new Error();
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -142,7 +144,7 @@ export default function AdminPage() {
 
     try {
       // 2. Fetch the COMPLETE article data using its _id (THIS IS THE CRITICAL STEP)
-      const res = await fetch(`/api/articles/${article._id}`);
+      const res = await fetch(`${API}/api/articles/${article._id}`);
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -479,7 +481,7 @@ export default function AdminPage() {
                   hero_image: formData.get("hero_image") as string || undefined,
                 };
 
-                const url = editingRoom._id ? `/api/rooms/${editingRoom._id}` : "/api/rooms";
+                const url = editingRoom._id ? `${API}/api/rooms/${editingRoom._id}` : `${API}/api/rooms`;
                 const method = editingRoom._id ? "PUT" : "POST";
 
                 const res = await fetch(url, {

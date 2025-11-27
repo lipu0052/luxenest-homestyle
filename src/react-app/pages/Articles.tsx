@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/react-app/components/Layout";
 import ArticleCard from "@/react-app/components/ArticleCard";
 import { Article } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -13,7 +14,7 @@ export default function ArticlesPage() {
 
     const fetchArticles = async () => {
       try {
-        const response = await fetch("/api/articles");
+        const response = await fetch(`${API}/api/articles`);
         const result = await response.json();
 
         // Support both formats:

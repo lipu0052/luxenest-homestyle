@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Product, Room } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 interface EditProductModalProps {
   product: Product;
@@ -24,7 +25,7 @@ export default function EditProductModal({ product, onClose, onSave }: EditProdu
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/rooms").then(r => r.json()).then(setRooms);
+    fetch(`${API}/api/rooms`).then(r => r.json()).then(setRooms);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +34,7 @@ export default function EditProductModal({ product, onClose, onSave }: EditProdu
 
     try {
       const isCreating = !product._id || product._id === "";
-      const url = isCreating ? "/api/products" : `/api/products/${product._id}`;
+      const url = isCreating ? `${API}/api/products` : `${API}/api/products/${product._id}`;
       const method = isCreating ? "POST" : "PUT";
 
       const res = await fetch(url, {

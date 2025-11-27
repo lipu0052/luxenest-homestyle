@@ -7,6 +7,8 @@ import ReviewSection from "@/react-app/components/ReviewSection";
 import EditProductModal from "@/react-app/components/EditProductModal";
 import { Product } from "@/types";
 import { Heart, ShoppingCart, Edit } from "lucide-react";
+const API = import.meta.env.VITE_API_URL; 
+
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -20,7 +22,7 @@ export default function ProductPage() {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await fetch("/api/admin/status");
+        const response = await fetch(`${API}/api/admin/status`);
         const data = await response.json();
         setIsAdmin(data.isAuthenticated);
       } catch (error) {
@@ -36,12 +38,12 @@ export default function ProductPage() {
 
     const fetchData = async () => {
       try {
-        const productResponse = await fetch(`/api/products/${slug}`);
+        const productResponse = await fetch(`${API}/api/products/${slug}`);
         const productData = await productResponse.json();
         setProduct(productData);
 
         if (productData.room_id) {
-          const relatedResponse = await fetch(`/api/products?room_id=${productData.room_id}`);
+          const relatedResponse = await fetch(`${API}/api/products?room_id=${productData.room_id}`);
           const relatedData = await relatedResponse.json();
           setRelatedProducts(
             relatedData.filter((p: Product) => p.id !== productData.id).slice(0, 4)
@@ -64,7 +66,7 @@ export default function ProductPage() {
     localStorage.setItem("session_id", sessionId);
 
     try {
-      await fetch("/api/wishlist", {
+      await fetch(`${API}/api/wishlist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: product.id, session_id: sessionId }),

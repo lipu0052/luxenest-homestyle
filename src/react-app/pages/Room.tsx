@@ -5,6 +5,7 @@ import Layout from "@/react-app/components/Layout";
 import ArticleCard from "@/react-app/components/ArticleCard";
 import ProductCard from "@/react-app/components/ProductCard";
 import { Room, Article, Product } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 export default function RoomPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -18,7 +19,7 @@ export default function RoomPage() {
 
     const fetchData = async () => {
       try {
-        const roomResponse = await fetch(`/api/rooms/${slug}`);
+        const roomResponse = await fetch(`${API}/api/rooms/${slug}`);
         if (!roomResponse.ok) throw new Error("Room not found");
         const roomData = await roomResponse.json();
         setRoom(roomData);

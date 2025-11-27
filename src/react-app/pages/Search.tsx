@@ -4,6 +4,7 @@ import Layout from "@/react-app/components/Layout";
 import ArticleCard from "@/react-app/components/ArticleCard";
 import ProductCard from "@/react-app/components/ProductCard";
 import { Room, Article, Product } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ export default function SearchPage() {
       }
 
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         setResults(data);
       } catch (error) {

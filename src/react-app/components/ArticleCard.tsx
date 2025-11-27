@@ -3,6 +3,7 @@ import { Article } from "@/types";
 import { ArrowRight, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import EditArticleModal from "./EditArticleModal";
+const API = import.meta.env.VITE_API_URL;
 
 interface ArticleCardProps {
   article: Article;
@@ -12,10 +13,11 @@ export default function ArticleCard({ article }: ArticleCardProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
+
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await fetch("/api/admin/status");
+        const response = await fetch(`${API}/api/admin/status`);
         const data = await response.json();
         setIsAdmin(data.isAuthenticated);
       } catch (error) {

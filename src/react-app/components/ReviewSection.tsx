@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { Review } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 interface ReviewSectionProps {
   productId: string;
@@ -22,7 +23,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`/api/reviews/${productId}`);
+      const response = await fetch(`${API}/api/reviews/${productId}`);
       const data = await response.json();
       setReviews(data);
     } catch (error) {
@@ -36,7 +37,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
     e.preventDefault();
 
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch(`${API}/api/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, product_id: productId }),

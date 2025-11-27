@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import {  Product } from "@/types";
 import { useState, useEffect } from "react";
 import EditProductModal from "./EditProductModal";
+const API = import.meta.env.VITE_API_URL;
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +17,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await fetch("/api/admin/status");
+        const response = await fetch(`${API}/api/admin/status`);
         const data = await response.json();
         setIsAdmin(data.isAuthenticated);
       } catch (error) {
@@ -33,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     localStorage.setItem("session_id", sessionId);
 
     try {
-      await fetch("/api/wishlist", {
+      await fetch(`${API}/api/wishlist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: product.id, session_id: sessionId }),

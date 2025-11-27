@@ -5,6 +5,7 @@ export const getProducts = async (req, res) => {
   const filter = room_id ? { room_id: room_id === 'null' ? null : room_id } : {};
   const products = await Product.find(filter).sort({ createdAt: -1 });
   res.json(products);
+  res.send('OK');
 };
 
 export const getProductBySlug = async (req, res) => {

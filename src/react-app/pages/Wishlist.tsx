@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/react-app/components/Layout";
 import ProductCard from "@/react-app/components/ProductCard";
 import { Product } from "@/types";
+const API = import.meta.env.VITE_API_URL;
 
 export default function WishlistPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,7 +20,7 @@ export default function WishlistPage() {
       }
 
       try {
-        const response = await fetch(`/api/wishlist?session_id=${sessionId}`);
+        const response = await fetch(`${API}/api/wishlist?session_id=${sessionId}`);
         const data = await response.json();
         setProducts(data);
       } catch (error) {

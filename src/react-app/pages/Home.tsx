@@ -7,6 +7,10 @@ import { ArrowRight, TrendingUp, Sparkles, BookOpen, Mail } from "lucide-react";
 // Add this under your imports
 type ArticleWithRoom = Article & { room_id: string | null };
 
+const API = import.meta.env.VITE_API_URL; 
+console.log("API URL:", API);
+
+
 export default function Home() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
@@ -18,15 +22,15 @@ export default function Home() {
 
   useEffect(() => {
     const initAdmin = async () => {
-      await fetch("/api/admin/init", { method: "POST" });
+      await fetch(`${API}/api/admin/init`, { method: "POST" });
     };
 
     const fetchData = async () => {
       try {
         const [roomsRes, productsRes, articlesRes] = await Promise.all([
-          fetch("/api/rooms"),
-          fetch("/api/products"),
-          fetch("/api/articles"),
+          fetch(`${API}/api/rooms`),
+          fetch(`${API}/api/products`),
+          fetch(`${API}/api/articles`),
         ]);
 
         const roomsData = await roomsRes.json();
@@ -93,7 +97,7 @@ export default function Home() {
     setSubscribing(true);
 
     try {
-      const response = await fetch("/api/subscribers", {
+      const response = await fetch(`${API}/api/subscribers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useState } from "react";
 import { Mail } from "lucide-react";
+const API = import.meta.env.VITE_API_URL;
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function Footer() {
     setLoading(true);
     
     try {
-      const response = await fetch("/api/subscribers", {
+      const response = await fetch(`${API}/api/subscribers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

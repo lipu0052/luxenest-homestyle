@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/react-app/components/Layout";
 import ProductCard from "@/react-app/components/ProductCard";
 import { Product } from "@/types";
-
+const API = import.meta.env.VITE_API_URL;
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function ProductsPage() {
     
     const fetchProducts = async () => {
       try {
-        const response = await fetch("/api/products");
+        const response = await fetch(`${API}/api/products`);
         const data = await response.json();
         setProducts(Array.isArray(data) ? data : []);
       } catch (error) {

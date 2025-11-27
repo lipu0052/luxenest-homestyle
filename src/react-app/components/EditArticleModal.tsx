@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+const API = import.meta.env.VITE_API_URL;
 import {
   X,
   Plus,
@@ -122,7 +123,7 @@ export default function EditArticleModal({
   }, [article]); // 🎯 FIX: Dependence on [article] object ensures re-sync when full data arrives
 
   useEffect(() => {
-    fetch("/api/rooms")
+    fetch(`${API}/api/rooms`)
       .then((r) => r.json())
       .then(setRooms)
       .catch(console.error);
@@ -156,7 +157,7 @@ export default function EditArticleModal({
     try {
       const isEdit = article._id && article._id.trim() !== "";
       const method = isEdit ? "PUT" : "POST";
-      const url = isEdit ? `/api/articles/${article._id}` : "/api/articles";
+      const url = isEdit ? `${API}/api/articles/${article._id}` : `${API}/api/articles`;
 
       const res = await fetch(url, {
         method,
