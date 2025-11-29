@@ -4,7 +4,7 @@ import { dirname, resolve } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-config({ path: resolve(__dirname, '../.env') });
+config({ path: resolve(__dirname, './.env') });
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -14,14 +14,7 @@ import allRoutes from './routes/allRoutes.js';
 
 const app = express();
 
-
-app.use(cors({
-  origin: [
-    "https://home-style-luxenest.netlify.app/"
-    
-  ],
-  credentials: true
-}));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/api', allRoutes);
