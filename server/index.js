@@ -17,7 +17,7 @@ const app = express();
 app.use(cors({
   origin: [
     "https://luxenest-homestyle.netlify.app/"
-
+    
   ],
   credentials: true
 }));
