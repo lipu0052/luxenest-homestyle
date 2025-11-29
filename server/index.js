@@ -14,6 +14,7 @@ import allRoutes from './routes/allRoutes.js';
 
 const app = express();
 
+
 app.use(cors({
   origin: [
     "https://home-style-luxenest.netlify.app/"
