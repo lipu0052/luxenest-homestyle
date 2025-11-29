@@ -18,7 +18,12 @@ export const login = async (req, res) => {
   const admin = await Admin.findOne({ username });
   if (admin && password === process.env.ADMIN_PASSWORD) {
     const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('admin_token', token, { httpOnly: true, sameSite: 'strict' });
+    res.cookie("admin_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
     return res.json({ success: true });
   }
   res.status(401).json({ error: 'Invalid credentials' });
