@@ -2,186 +2,172 @@
 import Article from '../models/Article.js';
 import mongoose from 'mongoose';
 
-// Helper: Calculate reading time (words per minute = 225)
+// Helper: Calculate reading time (~225 words per minute)
 const calculateReadTime = (text = '') => {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  const minutes = Math.max(1, Math.ceil(words / 225));
-  return minutes;
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 225));
 };
 
 // GET /api/articles
 export const getArticles = async (req, res) => {
-  try {
-    const { room_id, tag, limit = 12, page = 1 } = req.query;
+  try {
+    const { room_id, tag, limit = 12, page = 1 } = req.query;
 
-    const filter = {};
-    if (room_id && room_id !== 'null') filter.room_id = room_id;
-    if (room_id === 'null') filter.room_id = null;
-    if (tag) filter.tags = tag;
+    const filter = {};
 
-    const skip = (Number(page) - 1) * Number(limit);
+    // Handle room_id (can be string ObjectId or "null")
+    if (room_id && room_id !== 'null' && room_id !== '') {
+      if (mongoose.Types.ObjectId.isValid(room_id)) {
+        filter.room_id = new mongoose.Types.ObjectId(room_id);
+      }
+    } else if (room_id === 'null' || room_id === '') {
+      filter.room_id = null;
+    }
 
-    const [articles, total] = await Promise.all([
-      Article.find(filter)
-        .sort({ published_at: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .select('_id title slug excerpt hero_image read_time tags room_id published_at')
-        .lean(),
+    if (tag) filter.tags = tag;
 
-      Article.countDocuments(filter),
-    ]);
+    const skip = (Number(page) - 1) * Number(limit);
 
-    res.json({
-      articles,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error('getArticles error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+    const [articles, total] = await Promise.all([
+      Article.find(filter)
+        .sort({ published_at: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .select('title slug excerpt hero_image read_time tags room_id createdAt published_at').lean(),
+      Article.countDocuments(filter),
+    ]);
+
+    res.json({
+      articles,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('getArticles error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
-// 🚩 FIX: Unified controller to handle both slug and ID (used by frontend edit)
-// GET /api/articles/:param
-export const getArticleByParam = async (req, res) => {
-  try {
-    const { param } = req.params;
-    let query = {};
+// GET /api/articles/:slug  ← ONLY SLUG, NO ID EVER
+export const getArticleBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
 
-    // Check if the parameter is a valid MongoDB ObjectId (for Admin use)
-    if (mongoose.Types.ObjectId.isValid(param)) {
-      query._id = param;
-    } else {
-      // Otherwise, search by slug (for public use)
-      query.slug = param;
-    }
+    if (!slug) {
+      return res.status(400).json({ message: 'Slug is required' });
+    }
 
-    const article = await Article.findOne(query).lean();
+    const article = await Article.findOne({ slug })
+      .lean();
 
-    if (!article) {
-      return res.status(404).json({ message: 'Article not found' });
-    }
+    if (!article) {
+      return res.status(404).json({ message: 'Article not found' });
+    }
 
-    res.json(article);
-  } catch (error) {
-    console.error('getArticleByParam error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+    // Optional: Auto-calculate read_time if missing
+    if (!article.read_time) {
+      article.read_time = calculateReadTime(
+        (article.main_content || '') + ' ' + (article.content || '')
+      );
+    }
+
+    res.json(article);
+  } catch (error) {
+    console.error('getArticleBySlug error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
-// POST /api/articles
+// POST /api/articles (admin only)
 export const createArticle = async (req, res) => {
-  try {
-    const data = { ...req.body };
+  try {
+    const data = { ...req.body };
 
-    // Auto-calculate read_time
-    if (!data.read_time) {
-      const text = (data.main_content || '') + ' ' + (data.content || '');
-      data.read_time = calculateReadTime(text);
-    }
+    // Auto-calculate read_time
+    const fullText = (data.main_content || '') + ' ' + (data.content || '');
+    data.read_time = calculateReadTime(fullText);
 
-    // Set published_at if not provided
-    if (!data.published_at) {
-      data.published_at = new Date();
-    }
+    // Set published_at if not provided
+    if (!data.published_at) {
+      data.published_at = new Date();
+    }
 
-    const article = new Article(data);
-    await article.save();
+    const article = new Article(data);
+    await article.save();
 
-    res.status(201).json(article);
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Slug already exists' });
-    }
-    console.error('createArticle error:', error);
-    res.status(500).json({ message: 'Failed to create article' });
-  }
+    res.status(201).json(article);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Slug already exists' });
+    }
+    console.error('createArticle error:', error);
+    res.status(500).json({ message: 'Failed to create article' });
+  }
 };
 
-// PUT /api/articles/:id
+// PUT /api/articles/:id (admin only — uses MongoDB _id internally)
 export const updateArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid ID' });
-    }
+  try {
+    const { id } = req.params;
 
-    const data = { ...req.body };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid article ID' });
+    }
 
-    // Recalculate read_time if content changed
-    if (data.main_content || data.content) {
-      const current = await Article.findById(id);
-      const main = data.main_content || current.main_content || '';
-      const content = data.content || current.content || '';
-      data.read_time = calculateReadTime(main + ' ' + content);
-    }
+    const data = { ...req.body };
 
-    data.modified_at = new Date();
+    // Recalculate read_time if content changed
+    if (data.main_content !== undefined || data.content !== undefined) {
+      const currentArticle = await Article.findById(id).lean();
+      const main = data.main_content ?? currentArticle.main_content ?? '';
+      const content = data.content ?? currentArticle.content ?? '';
+      data.read_time = calculateReadTime(main + ' ' + content);
+    }
 
-    const article = await Article.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true, runValidators: true }
-    );
+    data.modified_at = new Date();
 
-    if (!article) {
-      return res.status(404).json({ message: 'Article not found' });
-    }
+    const article = await Article.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true, runValidators: true }
+    ).lean();
 
-    res.json(article);
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Slug already exists' });
-    }
-    console.error('updateArticle error:', error);
-    res.status(500).json({ message: 'Failed to update article' });
-  }
+    if (!article) {
+      return res.status(404).json({ message: 'Article not found' });
+    }
+
+    res.json(article);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Slug already exists' });
+    }
+    console.error('updateArticle error:', error);
+    res.status(500).json({ message: 'Failed to update article' });
+  }
 };
 
-// DELETE /api/articles/:id
+// DELETE /api/articles/:id (admin only)
 export const deleteArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid ID' });
-    }
+  try {
+    const { id } = req.params;
 
-    const article = await Article.findByIdAndDelete(id);
-    if (!article) {
-      return res.status(404).json({ message: 'Article not found' });
-    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid article ID' });
+    }
 
-    res.json({ message: 'Article deleted successfully' });
-  } catch (error) {
-    console.error('deleteArticle error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    const article = await Article.findByIdAndDelete(id);
 
-// Optional: For Related Topics section
-export const getRelatedTopics = async (req, res) => {
-  try {
-    const { related_to } = req.query;
-    if (!related_to) return res.json([]);
+    if (!article) {
+      return res.status(404).json({ message: 'Article not found' });
+    }
 
-    const article = await Article.findById(related_to).select('related_topics tags');
-    if (!article) return res.json([]);
-
-    const topics = (article.related_topics || []).map(slug => ({
-      title: slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-      slug,
-      excerpt: `Deep dive into ${slug.replace(/-/g, ' ')} design trends and tips`,
-      image: null, // You can populate later
-    }));
-
-    res.json(topics);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching related topics' });
-  }
+    res.json({ message: 'Article deleted successfully' });
+  } catch (error) {
+    console.error('deleteArticle error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };

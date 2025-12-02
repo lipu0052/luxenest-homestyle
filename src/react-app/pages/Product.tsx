@@ -7,7 +7,7 @@ import ReviewSection from "@/react-app/components/ReviewSection";
 import EditProductModal from "@/react-app/components/EditProductModal";
 import { Product } from "@/types";
 import { Heart, ShoppingCart, Edit } from "lucide-react";
-const API = import.meta.env.VITE_API_URL; 
+const API = import.meta.env.VITE_API_URL;
 
 
 export default function ProductPage() {
@@ -60,20 +60,32 @@ export default function ProductPage() {
   }, [slug]);
 
   const handleWishlist = async () => {
-    if (!product) return;
+    if (!product || isWishlisted) return;
 
-    const sessionId = localStorage.getItem("session_id") || crypto.randomUUID();
-    localStorage.setItem("session_id", sessionId);
+    let sessionId = localStorage.getItem("session_id");
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem("session_id", sessionId);
+    }
 
     try {
-      await fetch(`${API}/api/wishlist`, {
+      const response = await fetch(`${API}/api/wishlist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product.id, session_id: sessionId }),
+        body: JSON.stringify({
+          product_id: product.id,  // or product._id — make sure it's ObjectId string
+          session_id: sessionId,
+        }),
       });
-      setIsWishlisted(true);
-    } catch (error) {
-      console.error("Failed to add to wishlist:", error);
+
+      if (response.ok) {
+        setIsWishlisted(true);
+        // Optional: show toast
+      } else {
+        console.error("Failed to add to wishlist");
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -109,9 +121,10 @@ export default function ProductPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
           {/* Image Carousel */}
-          <div>
+          <div className="w-full max-w-[1200px] mx-auto px-3 sm:px-4 md:px-6 flex justify-center">
             <ImageCarousel images={images} alt={product.name} />
           </div>
+
 
           {/* Product Info */}
           <div>

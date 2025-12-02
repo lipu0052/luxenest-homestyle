@@ -11,7 +11,7 @@ export default function Footer() {
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const response = await fetch(`${API}/api/subscribers`, {
         method: "POST",
@@ -38,23 +38,21 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
-          <div>
+          <div className="p-0 m-0">
             <div className="flex items-center gap-3 mb-4">
-              <img 
-                src="https://mocha-cdn.com/019a99eb-ac15-7147-bf15-fdbcf1b92b92/image-(31).png" 
-                alt="LuxeNest Logo" 
+              {/* <img
+                src="https://mocha-cdn.com/019a99eb-ac15-7147-bf15-fdbcf1b92b92/image-(31).png"
+                alt="LuxeNest Logo"
                 className="h-26 w-28 brightness-0 invert"
-              />
-              {/* <img 
-                src="https://mocha-cdn.com/019a99eb-ac15-7147-bf15-fdbcf1b92b92/image-(32).png" 
-                alt="LuxeNest" 
-                className="h-6 brightness-0 invert"
               /> */}
+              <h2 className="text-4xl font-serif">LuxeNest</h2>
             </div>
-            <p className="text-gray-400 text-sm">
+
+            <p className="text-gray-400 text-sm m-0">
               Transform your living spaces with curated home design inspiration and premium products.
             </p>
           </div>
+
 
           {/* Quick Links */}
           <div>

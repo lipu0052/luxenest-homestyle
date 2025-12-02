@@ -1,9 +1,23 @@
-import mongoose from 'mongoose';
+// models/Wishlist.ts
+import mongoose from "mongoose";
 
 const wishlistSchema = new mongoose.Schema({
-  product_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  user_id: String,        // for logged-in users (future)
-  session_id: String,     // for guests
-}, { timestamps: true });
+  session_id: {
+    type: String,
+    required: true,
+  },
+  product_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
+}, { 
+  timestamps: true,
+  // Prevent same user (session) adding same product twice
+  indexes: [{ session_id: 1, product_id: 1 }, { unique: true }]
+});
 
-export default mongoose.model('Wishlist', wishlistSchema);
+// Prevent model redefinition error in dev
+const Wishlist = mongoose.models.Wishlist || mongoose.model("Wishlist", wishlistSchema);
+
+export default Wishlist;

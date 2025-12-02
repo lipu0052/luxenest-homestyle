@@ -160,9 +160,9 @@ export default function Home() {
 
               {/* Professional Heading */}
               <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight">
-                Transform Your Home Into a
+                Transform Your Home Into a Masterpiece
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white">
-                  Masterpiece
+                  
                 </span>
               </h1>
 
@@ -233,6 +233,60 @@ export default function Home() {
           <div className="w-7 h-12 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
             <div className="w-1.5 h-2.5 bg-white/50 rounded-full"></div>
           </div>
+        </div>
+      </section>
+       {/* Rooms Section */}
+      <section id="rooms" className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Explore by Room
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Browse our curated collection of design ideas, articles, and products organized by room
+            </p>
+          </div>
+
+          {rooms.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">No rooms yet. Visit the admin panel to add rooms.</p>
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition"
+              >
+                Go to Admin
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {rooms.map((room) => (
+                <Link
+                  key={room.id}
+                  to={`/rooms/${room.slug}`}
+                  className="group block"
+                >
+                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] bg-gray-200 mb-3 shadow-sm hover:shadow-md transition">
+                    {room.hero_image && (
+                      <img
+                        src={room.hero_image}
+                        alt={room.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4 md:p-6">
+                      <h3 className="font-serif text-xl md:text-2xl font-bold text-white">
+                        {room.name}
+                      </h3>
+                    </div>
+                  </div>
+                  {room.description && (
+                    <p className="text-gray-600 text-sm line-clamp-2">{room.description}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -319,60 +373,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Rooms Section */}
-      <section id="rooms" className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Explore by Room
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Browse our curated collection of design ideas, articles, and products organized by room
-            </p>
-          </div>
-
-          {rooms.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">No rooms yet. Visit the admin panel to add rooms.</p>
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition"
-              >
-                Go to Admin
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {rooms.map((room) => (
-                <Link
-                  key={room.id}
-                  to={`/rooms/${room.slug}`}
-                  className="group block"
-                >
-                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] bg-gray-200 mb-3 shadow-sm hover:shadow-md transition">
-                    {room.hero_image && (
-                      <img
-                        src={room.hero_image}
-                        alt={room.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4 md:p-6">
-                      <h3 className="font-serif text-xl md:text-2xl font-bold text-white">
-                        {room.name}
-                      </h3>
-                    </div>
-                  </div>
-                  {room.description && (
-                    <p className="text-gray-600 text-sm line-clamp-2">{room.description}</p>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+     
 
       {/* Newsletter Section */}
       <section id="newsletter" className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">

@@ -9,7 +9,7 @@ import {
 } from '../controllers/roomController.js';
 
 import {
-  getArticles, getArticleByParam, createArticle, updateArticle, deleteArticle
+  getArticles, getArticleBySlug, createArticle, updateArticle, deleteArticle
 } from '../controllers/articleController.js'; // 🚩 CHANGED: Import getArticleByParam
 
 import {
@@ -31,7 +31,7 @@ router.get('/rooms', getRooms);
 router.get('/rooms/:slug', getRoomBySlug);
 
 router.get('/articles', getArticles);
-router.get('/articles/:param', getArticleByParam); // 🚩 CRITICAL CHANGE: Handles both :slug (public) AND :id (admin fetch)
+router.get('/articles/:slug', getArticleBySlug); // NEW clean route
 
 router.get('/products', getProducts);
 router.get('/products/:slug', getProductBySlug);

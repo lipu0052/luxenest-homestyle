@@ -71,16 +71,6 @@ export interface Product {
   updatedAt?: string;
 }
 
-// Optional: Define Topic for Related Topics Section
-export interface Topic {
-  _id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  image?: string;
-  article_count?: number;
-  related_articles?: string[]; // article IDs
-}
 
 export interface Review {
   _id: string;
@@ -100,5 +90,5 @@ export interface Analytics {
   avg_time_on_page?: number; // ← NEW: for engagement tracking
 }
 
-export type EntityWithId = Room | Article | Product | Review | Topic;
+export type EntityWithId = Room | Article | Product | Review ;
 export type AdminTab = "rooms" | "articles" | "products" | "topics" | "subscribers" | "analytics";
