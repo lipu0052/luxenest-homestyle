@@ -1,69 +1,54 @@
-// controllers/wishlistController.js   (or wherever you have it)
+import WishlistItem from '../models/Wishlist.js';
 
-import mongoose from "mongoose";
-
-// Define schema + model (only once, safely)
-const wishlistItemSchema = new mongoose.Schema(
-  {
-    session_id: { type: String, required: true },
-    product_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
-  },
-  { timestamps: { createdAt: "created_at" } }
-);
-
-// Prevent "Cannot redefine model" error in development
-const WishlistItem =
-  mongoose.models.WishlistItem ||
-  mongoose.model("WishlistItem", wishlistItemSchema);
-
-// ADD TO WISHLIST
+// Add item to wishlist
 export const addToWishlist = async (req, res) => {
-  const { session_id, product_id } = req.body;
-
-  if (!session_id || !product_id) {
-    return res.status(400).json({ error: "Missing data" });
-  }
-
   try {
+    const { userId, productId } = req.body;
+    if (!userId || !productId) return res.status(400).json({ message: "userId and productId required" });
+
     await WishlistItem.updateOne(
-      { session_id, product_id },
-      { $setOnInsert: { session_id, product_id } },
+      { userId, productId },
+      { $setOnInsert: { userId, productId } },
       { upsert: true }
     );
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Add error:", error);
-    res.status(500).json({ error: "Server error" });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Wishlist add error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-// GET WISHLIST
-// GET WISHLIST - FIXED VERSION
-export const getWishlist = async (req, res) => {
-  const session_id = req.query.session_id;
-
-  if (!session_id) {
-    return res.json([]);
-  }
-
+// Remove item from wishlist
+export const removeFromWishlist = async (req, res) => {
   try {
-    const items = await WishlistItem.find({ session_id })
-      .populate("product_id")
-      .sort({ created_at: -1 })
-      .lean();
+    const { userId, productId } = req.body;
+    if (!userId || !productId) return res.status(400).json({ message: "userId and productId required" });
 
-    // THIS IS THE KEY FIX:
-    const products = items
-      .map((item) => item.product_id)  // extract the actual product
-      .filter((product) => product !== null && product !== undefined); // remove deleted products
+    const deleted = await WishlistItem.findOneAndDelete({ userId, productId });
+    if (!deleted) {
+      return res.status(404).json({ message: "Item not found in wishlist" });
+    }
 
-    res.json(products);
-  } catch (error) {
-    console.error("Get wishlist error:", error);
-    res.status(500).json({ error: "Failed to load wishlist" });
+    return res.json({ success: true, message: "Item removed from wishlist" });
+  } catch (err) {
+    console.error("Wishlist remove error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all wishlist items
+export const getWishlist = async (req, res) => {
+  try {
+    const { session_id } = req.query;
+    if (!session_id) return res.json([]);
+
+    const items = await WishlistItem.find({ userId: session_id })
+      .populate({ path: 'productId', model: 'Product' });
+
+    return res.json(items.map(item => item.productId)); // send only products
+  } catch (err) {
+    console.error('Wishlist fetch error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };

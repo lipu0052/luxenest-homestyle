@@ -1,23 +1,11 @@
-// models/Wishlist.ts
-import mongoose from "mongoose";
+// server/models/WishlistItem.js
+import mongoose from 'mongoose';
 
-const wishlistSchema = new mongoose.Schema({
-  session_id: {
-    type: String,
-    required: true,
-  },
-  product_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-    required: true,
-  },
-}, { 
-  timestamps: true,
-  // Prevent same user (session) adding same product twice
-  indexes: [{ session_id: 1, product_id: 1 }, { unique: true }]
+const wishlistItemSchema = new mongoose.Schema({
+  userId: { type: String, required: true }, // session ID as string
+  productId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Product' },
+  addedAt: { type: Date, default: Date.now },
 });
 
-// Prevent model redefinition error in dev
-const Wishlist = mongoose.models.Wishlist || mongoose.model("Wishlist", wishlistSchema);
-
-export default Wishlist;
+const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
+export default WishlistItem;

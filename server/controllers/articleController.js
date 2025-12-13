@@ -1,21 +1,28 @@
-// controllers/articleController.js
+// controllers/articleController.js — FINAL VERSION (2025 LuxeNest Pro)
+
 import Article from '../models/Article.js';
 import mongoose from 'mongoose';
 
 // Helper: Calculate reading time (~225 words per minute)
-const calculateReadTime = (text = '') => {
+const calculateReadTime = (main = '', sections = []) => {
+  let text = main || '';
+
+  if (Array.isArray(sections)) {
+    sections.forEach(sec => {
+      text += ' ' + (sec.content || '');
+    });
+  }
+
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.ceil(words / 225));
 };
 
-// GET /api/articles
+// GET /api/articles — list (lightweight)
 export const getArticles = async (req, res) => {
   try {
     const { room_id, tag, limit = 12, page = 1 } = req.query;
-
     const filter = {};
 
-    // Handle room_id (can be string ObjectId or "null")
     if (room_id && room_id !== 'null' && room_id !== '') {
       if (mongoose.Types.ObjectId.isValid(room_id)) {
         filter.room_id = new mongoose.Types.ObjectId(room_id);
@@ -33,7 +40,8 @@ export const getArticles = async (req, res) => {
         .sort({ published_at: -1, createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
-        .select('title slug excerpt hero_image read_time tags room_id createdAt published_at').lean(),
+        .select('title slug excerpt hero_image read_time tags room_id createdAt published_at')
+        .lean(),
       Article.countDocuments(filter),
     ]);
 
@@ -52,27 +60,18 @@ export const getArticles = async (req, res) => {
   }
 };
 
-// GET /api/articles/:slug  ← ONLY SLUG, NO ID EVER
+// GET /api/articles/slug/:slug — public article page
 export const getArticleBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    if (!slug) return res.status(400).json({ message: 'Slug required' });
 
-    if (!slug) {
-      return res.status(400).json({ message: 'Slug is required' });
-    }
+    const article = await Article.findOne({ slug }).lean();
+    if (!article) return res.status(404).json({ message: 'Article not found' });
 
-    const article = await Article.findOne({ slug })
-      .lean();
-
-    if (!article) {
-      return res.status(404).json({ message: 'Article not found' });
-    }
-
-    // Optional: Auto-calculate read_time if missing
+    // Auto-calculate read_time if missing (supports new content_sections)
     if (!article.read_time) {
-      article.read_time = calculateReadTime(
-        (article.main_content || '') + ' ' + (article.content || '')
-      );
+      article.read_time = calculateReadTime(article.main_content, article.content_sections);
     }
 
     res.json(article);
@@ -82,16 +81,38 @@ export const getArticleBySlug = async (req, res) => {
   }
 };
 
-// POST /api/articles (admin only)
+// GET /api/articles/:id — ADMIN ONLY (full article with content_sections + products)
+export const getArticleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid article ID' });
+    }
+
+    const article = await Article.findById(id).lean();
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+
+    // Ensure read_time is up-to-date
+    if (!article.read_time) {
+      article.read_time = calculateReadTime(article.main_content, article.content_sections);
+    }
+
+    res.json(article);
+  } catch (error) {
+    console.error('getArticleById error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// POST /api/articles — create (admin)
 export const createArticle = async (req, res) => {
   try {
     const data = { ...req.body };
 
-    // Auto-calculate read_time
-    const fullText = (data.main_content || '') + ' ' + (data.content || '');
-    data.read_time = calculateReadTime(fullText);
+    // Calculate read_time from main_content + all section content
+    data.read_time = calculateReadTime(data.main_content, data.content_sections);
 
-    // Set published_at if not provided
     if (!data.published_at) {
       data.published_at = new Date();
     }
@@ -109,7 +130,7 @@ export const createArticle = async (req, res) => {
   }
 };
 
-// PUT /api/articles/:id (admin only — uses MongoDB _id internally)
+// PUT /api/articles/:id — update (admin)
 export const updateArticle = async (req, res) => {
   try {
     const { id } = req.params;
@@ -120,14 +141,12 @@ export const updateArticle = async (req, res) => {
 
     const data = { ...req.body };
 
-    // Recalculate read_time if content changed
-    if (data.main_content !== undefined || data.content !== undefined) {
-      const currentArticle = await Article.findById(id).lean();
-      const main = data.main_content ?? currentArticle.main_content ?? '';
-      const content = data.content ?? currentArticle.content ?? '';
-      data.read_time = calculateReadTime(main + ' ' + content);
-    }
+    // Recalculate read_time if main_content or content_sections changed
+    const current = await Article.findById(id).lean();
+    const main = data.main_content ?? current?.main_content ?? '';
+    const sections = data.content_sections ?? current?.content_sections ?? [];
 
+    data.read_time = calculateReadTime(main, sections);
     data.modified_at = new Date();
 
     const article = await Article.findByIdAndUpdate(
@@ -150,7 +169,7 @@ export const updateArticle = async (req, res) => {
   }
 };
 
-// DELETE /api/articles/:id (admin only)
+// DELETE /api/articles/:id
 export const deleteArticle = async (req, res) => {
   try {
     const { id } = req.params;
